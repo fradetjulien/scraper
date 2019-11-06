@@ -6,8 +6,13 @@ __pycache__/
 # C extensions
 *.so
 
+# Chrome driver
+
+chromedriver
+
 # Distribution / packaging
 .Python
+Pipfile.lock
 build/
 develop-eggs/
 dist/
