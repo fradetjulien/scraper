@@ -8,11 +8,11 @@ __pycache__/
 
 # Chrome driver
 
-chromedriver
+scraper/chromedriver
 
 # Distribution / packaging
 .Python
-Pipfile.lock
+scraper/Pipfile.lock
 build/
 develop-eggs/
 dist/
