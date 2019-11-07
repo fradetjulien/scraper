@@ -1,27 +1,78 @@
 import click
+import pycountry
 from selenium import webdriver
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
 from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
-# Convert the Data received into a new CSV file.
+# Convert the Data received into a new CSV file
 def convertDataToCSV():
     print("Data Saved")
     return
 
-# Create a new instance of the Chrome driver and go to the WITS website
-def setupInstance():
-    driver = webdriver.Chrome(executable_path=".//chromedriver")
-    driver.get("https://wits.worldbank.org/CountryProfile/en/Country/ARG/Year/2017/TradeFlow/Export/Partner/ All/Product/Total")
+# Create a new instance of the Chrome driver and go to the WITS website, then configure the search
+def loadData(isocode):
+    try:
+        driver = webdriver.Chrome(executable_path=".//chromedriver")
+        driver.get("https://wits.worldbank.org/CountryProfile/en/Country/" + isocode + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
+    except:
+        print("Error while loading data.")
     return (driver)
 
-# Fill the form present in the page corresponding to the export of the Country selected in 2017
-def setupSearch(driver):
-    wait = WebDriverWait(driver, 10)
-    element = wait.until(EC.element_to_be_clickable((By.ID,'selectedCountryRegion')))
-    element = driver.find_element_by_id("selectedCountryRegion").click()
-    element = wait.until(EC.element_to_be_clickable((By.ID,'byCountry_country_dropdown')))
+# Get the top 4 countries
+def getTopCountries(driver, isocode):
+    topCountries = []
+    i = 0
+    while (i < 4):
+        path = "//div[@id='row" + str(i) + "jqx-ProductGrid']"
+        try:
+            all_data = driver.find_elements_by_xpath(path)
+            for data in all_data:
+                topCountries.append(addToList(data))
+            i = i + 1
+        except:
+            print("Error while getting data.")
+            break
+    return (topCountries)
+
+# Convert the country name into an ISO Code
+def convertToIsoCode(countryName):
+    try:
+        isoCode = pycountry.countries.get(name=countryName).alpha_3
+    except:
+        print("Impossible to convert this country name into an ISO Code.")
+        return (countryName)
+    return (isoCode)
+
+# Round the total value
+def roundedValue(number):
+    try:
+        totalValue = number.split(',')
+        roundedValue = totalValue[0]
+    except:
+        print("Failed while rounding the total value.")
+        return (number)
+    return (roundedValue)
+
+# Add the data into a list
+def addToList(data):
+    try:
+        country = data.text.splitlines()
+        country.pop()
+    except:
+        print("Error while adding data.")
+
+    country[0] = convertToIsoCode(country[0])
+    country[1] = roundedValue(country[1])
+    return country
+
+# Display final results
+def displayResults(topCountries):
+    try:
+        for country in topCountries:
+            print(country[0], country[1] + "B")
+    except:
+        print("Results no found.")
     return
 
 @click.group()
@@ -37,9 +88,9 @@ def imports():
 @click.argument('isocode')
 def displayImportsByCountry(save, isocode):
     "Display major imports of a country"
-    instance = setupInstance()
-    setupSearch(instance)
-    instance.quit()
+    driver = loadData(isocode)
+    topCountries = getTopCountries(driver, isocode)
+    displayResults(topCountries)
     return
 
 @imports.command('all')

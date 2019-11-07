@@ -1,7 +1,5 @@
 # Scraper
 
-A command line scraper which is scraping data from the World Integrated Trade Solution website in order to know the product exports of any country.
-
     - IsoCode of a country which displays the top 4 countries that received imports of this country.
 
     - Grab 5 country randomly and then display the top 4 countries that received imports for all this 5 countries.
