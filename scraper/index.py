@@ -1,6 +1,7 @@
 import click
 import pycountry
 import csv
+import random
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
@@ -15,12 +16,12 @@ def saveResultsToCSV(results):
     return
 
 # Create a new instance of the Chrome driver and go to the WITS website, then configure the search
-def loadData(isocode):
+def loadData(driver, isocode):
     try:
-        driver = webdriver.Chrome(executable_path=".//chromedriver")
         driver.get("https://wits.worldbank.org/CountryProfile/en/Country/" + isocode + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
     except:
         print("Error while loading data.")
+        raise
     return (driver)
 
 # Get the top 4 countries
@@ -66,7 +67,7 @@ def addToList(data):
         country.pop()
     except:
         print("Error while adding data.")
-
+        raise
     country[0] = convertToIsoCode(country[0])
     country[1] = roundedValue(country[1])
     return country
@@ -78,6 +79,7 @@ def displayResults(topCountries):
             print(country[0], country[1])
     except:
         print("Results no found.")
+        raise
     return
 
 @click.group()
@@ -93,19 +95,32 @@ def imports():
 @click.argument('isocode')
 def displayImportsByCountry(save, isocode):
     "Display major imports of a country"
-    driver = loadData(isocode)
+    driver = webdriver.Chrome(executable_path=".//chromedriver")
+    driver = loadData(driver, isocode)
     topCountries = getTopCountries(driver, isocode)
     displayResults(topCountries)
     if save:
         saveResultsToCSV(topCountries)
-    return
+    return (topCountries)
 
 @imports.command('all')
 @click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
 def listImportsOfFiveCountry(save):
     "Display major imports of 5 random country."
+    driver = webdriver.Chrome(executable_path=".//chromedriver")
+    isoCode = []
+    for country in pycountry.countries:
+        isoCode.append(country.alpha_3)
+    i = 0
+    allResults = []
+    while (i < 5):
+        x = random.randint(1,248)
+        driver = loadData(driver, isoCode[x])
+        allResults.append(getTopCountries(driver, isoCode[x]))
+        i = i + 1
     if save:
-        saveResultsToCSV(topCountries)
+        saveResultsToCSV(allResults)
+    print(allResults)
     return
 
 if __name__ == '__main__':
