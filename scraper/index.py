@@ -1,13 +1,17 @@
 import click
 import pycountry
+import csv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
 from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
 # Convert the Data received into a new CSV file
-def convertDataToCSV():
-    print("Data Saved")
+def saveResultsToCSV(results):
+    with open('results.csv', 'w') as csvfile:
+        filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        for result in results:
+            filewriter.writerow(result)
     return
 
 # Create a new instance of the Chrome driver and go to the WITS website, then configure the search
@@ -52,6 +56,7 @@ def roundedValue(number):
     except:
         print("Failed while rounding the total value.")
         return (number)
+    roundedValue = roundedValue + "B"
     return (roundedValue)
 
 # Add the data into a list
@@ -70,7 +75,7 @@ def addToList(data):
 def displayResults(topCountries):
     try:
         for country in topCountries:
-            print(country[0], country[1] + "B")
+            print(country[0], country[1])
     except:
         print("Results no found.")
     return
@@ -91,6 +96,8 @@ def displayImportsByCountry(save, isocode):
     driver = loadData(isocode)
     topCountries = getTopCountries(driver, isocode)
     displayResults(topCountries)
+    if save:
+        saveResultsToCSV(topCountries)
     return
 
 @imports.command('all')
@@ -98,7 +105,7 @@ def displayImportsByCountry(save, isocode):
 def listImportsOfFiveCountry(save):
     "Display major imports of 5 random country."
     if save:
-        convertDataToCSV()
+        saveResultsToCSV(topCountries)
     return
 
 if __name__ == '__main__':
