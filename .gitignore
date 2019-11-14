@@ -9,6 +9,9 @@ __pycache__/
 # Chrome driver
 
 scraper/chromedriver
+scraper/.DS_Store
+.DS_Store
+executable/
 
 # Distribution / packaging
 .Python
