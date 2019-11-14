@@ -54,7 +54,6 @@ def convert_to_iso_code(country_name):
     try:
         iso_code = pycountry.countries.get(name=country_name).alpha_3
     except:
-        print("Impossible to convert this country name into an ISO Code.")
         return country_name
     return iso_code
 
@@ -95,9 +94,11 @@ def generate_iso_code():
         raise
     return iso_code
 
-def display_all_results(all_results):
-    '''Display all results in the CLI'''
-    print(all_results)
+def display_all_results(top_countries, iso_code):
+    print(iso_code)
+    if top_countries:
+        display_results(top_countries)    
+    print('\n')
 
 def display_results(top_countries):
     '''
@@ -107,8 +108,7 @@ def display_results(top_countries):
         for country in top_countries:
             print(country[0], country[1])
     except:
-        print("Results no found.")
-        raise
+        print("Results not found.")
 
 @click.group()
 def cli():
@@ -145,11 +145,13 @@ def list_imports_of_five_country(save):
     while i < 5:
         random_value = random.randint(1, 248)
         driver = load_data(driver, iso_code[random_value])
-        all_results.append(get_top_countries(driver))
+        top_countries = get_top_countries(driver)
+        all_results.append(top_countries)
+        display_all_results(top_countries, iso_code[random_value])
+        top_countries = top_countries.clear()
         i = i + 1
     if save:
         save_results_to_csv(all_results)
-    display_all_results(all_results)
 
 if __name__ == '__main__':
     cli()
