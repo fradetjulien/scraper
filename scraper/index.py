@@ -85,6 +85,9 @@ def add_to_list(data):
     return country
 
 def generate_iso_code():
+    '''
+    Generate a list of valid iso codes
+    '''
     iso_code = []
     try:
         for country in pycountry.countries:
@@ -95,6 +98,9 @@ def generate_iso_code():
     return iso_code
 
 def display_all_results(top_countries, iso_code):
+    '''
+    Display all 5 final results
+    '''
     print(iso_code)
     if top_countries:
         display_results(top_countries)    
