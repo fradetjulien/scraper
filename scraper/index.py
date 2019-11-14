@@ -1,127 +1,139 @@
-import click
-import pycountry
 import csv
 import random
+import click
+import pycountry
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
-from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
-# Convert the Data received into a new CSV file
-def saveResultsToCSV(results):
-    with open('results.csv', 'w') as csvfile:
-        filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        for result in results:
-            filewriter.writerow(result)
-    return
-
-# Create a new instance of the Chrome driver and go to the WITS website, then configure the search
-def loadData(driver, isocode):
+def save_results_to_csv(results):
+    '''
+    Convert the Data received into a new CSV file
+    '''
     try:
-        driver.get("https://wits.worldbank.org/CountryProfile/en/Country/" + isocode + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
+        with open('results.csv', 'w') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|',
+                                    quoting=csv.QUOTE_MINIMAL)
+            for result in results:
+                filewriter.writerow(result)
+    except:
+        print("Sorry, we were unable to create the file results.")
+
+def load_data(driver, iso_code):
+    """
+    Create a new instance of the Chrome driver and go to the WITS website, then configure the search
+    """
+    try:
+        driver.get("https://wits.worldbank.org/CountryProfile/en/Country/" 
+                   + iso_code + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
     except:
         print("Error while loading data.")
         raise
-    return (driver)
+    return driver
 
-# Get the top 4 countries
-def getTopCountries(driver, isocode):
-    topCountries = []
+def get_top_countries(driver):
+    '''
+    Get the top 4 countries
+    '''
+    top_countries = []
     i = 0
-    while (i < 4):
+    while i < 4:
         path = "//div[@id='row" + str(i) + "jqx-ProductGrid']"
         try:
             all_data = driver.find_elements_by_xpath(path)
             for data in all_data:
-                topCountries.append(addToList(data))
+                top_countries.append(add_to_list(data))
             i = i + 1
         except:
             print("Error while getting data.")
             break
-    return (topCountries)
+    return top_countries
 
-# Convert the country name into an ISO Code
-def convertToIsoCode(countryName):
+def convert_to_iso_code(country_name):
+    '''
+    Convert the country name into an ISO Code
+    '''
     try:
-        isoCode = pycountry.countries.get(name=countryName).alpha_3
+        iso_code = pycountry.countries.get(name=country_name).alpha_3
     except:
         print("Impossible to convert this country name into an ISO Code.")
-        return (countryName)
-    return (isoCode)
+        return country_name
+    return iso_code
 
-# Round the total value
-def roundedValue(number):
+def round_up_value(number):
+    '''
+    Round up the total value
+    '''
     try:
-        totalValue = number.split(',')
-        roundedValue = totalValue[0]
+        total_value = number.split(',')
+        rounded_value = total_value[0]
     except:
         print("Failed while rounding the total value.")
-        return (number)
-    roundedValue = roundedValue + "B"
-    return (roundedValue)
+        return number
+    rounded_value = rounded_value + "B"
+    return rounded_value
 
-# Add the data into a list
-def addToList(data):
+def add_to_list(data):
+    '''
+    Add the data into a list
+    '''
     try:
         country = data.text.splitlines()
         country.pop()
     except:
         print("Error while adding data.")
         raise
-    country[0] = convertToIsoCode(country[0])
-    country[1] = roundedValue(country[1])
+    country[0] = convert_to_iso_code(country[0])
+    country[1] = round_up_value(country[1])
     return country
 
-# Display final results
-def displayResults(topCountries):
+def display_results(top_countries):
+    '''
+    Display final results
+    '''
     try:
-        for country in topCountries:
+        for country in top_countries:
             print(country[0], country[1])
     except:
         print("Results no found.")
         raise
-    return
 
 @click.group()
 def cli():
-    """Scrapper Project"""
+    '''Scrapper Project'''
 
 @cli.group('imports')
 def imports():
-    """Commands for Imports"""
+    '''Commands for Imports'''
 
 @imports.command('country')
 @click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
 @click.argument('isocode')
-def displayImportsByCountry(save, isocode):
+def display_imports_by_country(save, isocode):
     "Display major imports of a country"
     driver = webdriver.Chrome(executable_path=".//chromedriver")
-    driver = loadData(driver, isocode)
-    topCountries = getTopCountries(driver, isocode)
-    displayResults(topCountries)
+    driver = load_data(driver, isocode)
+    top_countries = get_top_countries(driver)
+    display_results(top_countries)
     if save:
-        saveResultsToCSV(topCountries)
-    return (topCountries)
+        save_results_to_csv(top_countries)
 
 @imports.command('all')
 @click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
-def listImportsOfFiveCountry(save):
+def list_imports_of_five_country(save):
     "Display major imports of 5 random country."
     driver = webdriver.Chrome(executable_path=".//chromedriver")
-    isoCode = []
+    iso_code = []
     for country in pycountry.countries:
-        isoCode.append(country.alpha_3)
+        iso_code.append(country.alpha_3)
     i = 0
-    allResults = []
-    while (i < 5):
-        x = random.randint(1,248)
-        driver = loadData(driver, isoCode[x])
-        allResults.append(getTopCountries(driver, isoCode[x]))
+    all_results = []
+    while i < 5:
+        random_value = random.randint(1, 248)
+        driver = load_data(driver, iso_code[random_value])
+        all_results.append(get_top_countries(driver))
         i = i + 1
     if save:
-        saveResultsToCSV(allResults)
-    print(allResults)
-    return
+        save_results_to_csv(all_results)
+    print(all_results)
 
 if __name__ == '__main__':
     cli()
