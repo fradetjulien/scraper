@@ -85,6 +85,20 @@ def add_to_list(data):
     country[1] = round_up_value(country[1])
     return country
 
+def generate_iso_code():
+    iso_code = []
+    try:
+        for country in pycountry.countries:
+            iso_code.append(country.alpha_3)
+    except:
+        print("Failure during iso codes generation.")
+        raise
+    return iso_code
+
+def display_all_results(all_results):
+    '''Display all results in the CLI'''
+    print(all_results)
+
 def display_results(top_countries):
     '''
     Display final results
@@ -98,11 +112,15 @@ def display_results(top_countries):
 
 @click.group()
 def cli():
-    '''Scrapper Project'''
+    '''
+    Scrapper Project
+    '''
 
 @cli.group('imports')
 def imports():
-    '''Commands for Imports'''
+    '''
+    Commands for Imports
+    '''
 
 @imports.command('country')
 @click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
@@ -121,9 +139,7 @@ def display_imports_by_country(save, isocode):
 def list_imports_of_five_country(save):
     "Display major imports of 5 random country."
     driver = webdriver.Chrome(executable_path=".//chromedriver")
-    iso_code = []
-    for country in pycountry.countries:
-        iso_code.append(country.alpha_3)
+    iso_code = generate_iso_code()
     i = 0
     all_results = []
     while i < 5:
@@ -133,7 +149,7 @@ def list_imports_of_five_country(save):
         i = i + 1
     if save:
         save_results_to_csv(all_results)
-    print(all_results)
+    display_all_results(all_results)
 
 if __name__ == '__main__':
     cli()
