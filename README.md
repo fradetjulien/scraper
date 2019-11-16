@@ -24,6 +24,14 @@ brew install pipenv
 
     - Save which will then save the contents into a CSV file.
 
+
+## Example
+
+<p align="center">
+    <img src="assets/country-usage-example.png" size="350">
+    <img src="assets/all-usage-example.png" size="550">
+</p>
+
 ## Executable
 
 If you want to build a cross-platform executable, you need to execute the following bash commands :
