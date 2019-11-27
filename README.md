@@ -18,7 +18,7 @@ brew install pipenv
 
 ## Usage
 ```bash
-pipenv run python3 index.py imports country <IsoCOde>
+pipenv run python3 index.py imports country <IsoCode>
         
     - IsoCode of a country which displays the top 4 countries that received imports of this country.
 ```
