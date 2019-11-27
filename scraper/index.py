@@ -1,3 +1,6 @@
+'''
+Scraper project
+'''
 import csv
 import random
 import click
@@ -14,75 +17,10 @@ def save_results_to_csv(results):
                                     quoting=csv.QUOTE_MINIMAL)
             for result in results:
                 filewriter.writerow(result)
-    except:
+    except IndexError:
         print("Sorry, we were unable to create the file results.")
-
-def load_data(driver, iso_code):
-    """
-    Create a new instance of the Chrome driver and go to the WITS website, then configure the search
-    """
-    try:
-        driver.get("https://wits.worldbank.org/CountryProfile/en/Country/" 
-                   + iso_code + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
-    except:
-        print("Error while loading data.")
-        raise
-    return driver
-
-def get_top_countries(driver):
-    '''
-    Get the top 4 countries
-    '''
-    top_countries = []
-    i = 0
-    while i < 4:
-        path = "//div[@id='row" + str(i) + "jqx-ProductGrid']"
-        try:
-            all_data = driver.find_elements_by_xpath(path)
-            for data in all_data:
-                top_countries.append(add_to_list(data))
-            i = i + 1
-        except:
-            print("Error while getting data.")
-            break
-    return top_countries
-
-def convert_to_iso_code(country_name):
-    '''
-    Convert the country name into an ISO Code
-    '''
-    try:
-        iso_code = pycountry.countries.get(name=country_name).alpha_3
-    except:
-        return country_name
-    return iso_code
-
-def round_up_value(number):
-    '''
-    Round up the total value
-    '''
-    try:
-        total_value = number.split(',')
-        rounded_value = total_value[0]
-    except:
-        print("Failed while rounding the total value.")
-        return number
-    rounded_value = rounded_value + "B"
-    return rounded_value
-
-def add_to_list(data):
-    '''
-    Add the data into a list
-    '''
-    try:
-        country = data.text.splitlines()
-        country.pop()
-    except:
-        print("Error while adding data.")
-        raise
-    country[0] = convert_to_iso_code(country[0])
-    country[1] = round_up_value(country[1])
-    return country
+    except csv.Error:
+        print("Sorry, we were unable to create the file results.")
 
 def generate_iso_code():
     '''
@@ -103,7 +41,7 @@ def display_all_results(top_countries, iso_code):
     '''
     print(iso_code)
     if top_countries:
-        display_results(top_countries)    
+        display_results(top_countries)
     print('\n')
 
 def display_results(top_countries):
@@ -113,8 +51,75 @@ def display_results(top_countries):
     try:
         for country in top_countries:
             print(country[0], country[1])
-    except:
+    except IndexError:
         print("Results not found.")
+
+def round_up_value(number):
+    '''
+    Round up the total value
+    '''
+    try:
+        total_value = number.split(',')
+        rounded_value = total_value[0]
+    except ValueError:
+        print("Failed while rounding the total value.")
+        return number
+    rounded_value = rounded_value + "B"
+    return rounded_value
+
+def convert_to_iso_code(country_name):
+    '''
+    Convert the country name into an ISO Code
+    '''
+    try:
+        iso_code = pycountry.countries.get(name=country_name).alpha_3
+    except:
+        return country_name
+    return iso_code
+
+def add_to_list(data):
+    '''
+    Add the data into a list
+    '''
+    try:
+        country = data.text.splitlines()
+        country.pop()
+    except:
+        print("Error while adding data.")
+        raise
+    country[0] = convert_to_iso_code(country[0])
+    country[1] = round_up_value(country[1])
+    return country
+
+def get_top_countries(driver):
+    '''
+    Get the top 4 countries
+    '''
+    top_countries = []
+    i = 0
+    while i < 4:
+        path = "//div[@id='row" + str(i) + "jqx-ProductGrid']"
+        try:
+            all_data = driver.find_elements_by_xpath(path)
+            for data in all_data:
+                top_countries.append(add_to_list(data))
+            i = i + 1
+        except IndexError:
+            print("Error while getting data.")
+            break
+    return top_countries
+
+def load_data(driver, iso_code):
+    """
+    Create a new instance of the Chrome driver and go to the WITS website, then configure the search
+    """
+    try:
+        driver.get("https://wits.worldbank.org/CountryProfile/en/Country/"
+                   + iso_code + "/Year/2017/TradeFlow/Export/Partner/by-country/Product/Total")
+    except:
+        print("Error while loading data.")
+        raise
+    return driver
 
 @click.group()
 def cli():
@@ -129,10 +134,12 @@ def imports():
     '''
 
 @imports.command('country')
-@click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
+@click.option('--save', default=None, help="Save Data into a CSV file.", is_flag=True)
 @click.argument('isocode')
 def display_imports_by_country(save, isocode):
-    "Display major imports of a country"
+    '''
+    Display major imports of a country
+    '''
     driver = webdriver.Chrome(executable_path=".//chromedriver")
     driver = load_data(driver, isocode)
     top_countries = get_top_countries(driver)
@@ -143,7 +150,9 @@ def display_imports_by_country(save, isocode):
 @imports.command('all')
 @click.option('--save', default=None, help="Save Data to a CSV file.", is_flag=True)
 def list_imports_of_five_country(save):
-    "Display major imports of 5 random country."
+    '''
+    Display major imports of 5 random country.
+    '''
     driver = webdriver.Chrome(executable_path=".//chromedriver")
     iso_code = generate_iso_code()
     i = 0
