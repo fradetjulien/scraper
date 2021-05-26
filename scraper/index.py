@@ -170,3 +170,4 @@ def list_imports_of_five_country(save):
 
 if __name__ == '__main__':
     cli()
+    print("test")
